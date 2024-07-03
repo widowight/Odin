@@ -40,6 +40,14 @@ when ODIN_OS == .OpenBSD {
 
 	// CLOCK_MONOTONIC_RAW doesn't exist, use CLOCK_MONOTONIC
 	CLOCK_MONOTONIC_RAW :: CLOCK_MONOTONIC
+} else when ODIN_OS == .NetBSD {
+	CLOCK_REALTIME  :: 0
+	CLOCK_VIRTUAL   :: 1
+	CLOCK_PROF      :: 2
+	CLOCK_MONOTONIC :: 3
+
+	// CLOCK_MONOTONIC_RAW doesn't exist, use CLOCK_MONOTONIC
+	CLOCK_MONOTONIC_RAW :: CLOCK_MONOTONIC
 } else {
 	CLOCK_REALTIME           :: 0 // NOTE(tetra): May jump in time, when user changes the system time.
 	CLOCK_MONOTONIC          :: 1 // NOTE(tetra): May stand still while system is asleep.
@@ -62,7 +70,12 @@ CLOCK_CALENDAR :: CLOCK_MONOTONIC
 boot_time_in_nanoseconds :: proc "c" () -> i64 {
 	ts_now, ts_boottime: timespec
 	clock_gettime(CLOCK_REALTIME, &ts_now)
-	clock_gettime(CLOCK_BOOTTIME, &ts_boottime)
+	when ODIN_OS == .NetBSD {
+		mib := []i32 { CTL_KERN, KERN_BOOTTIME }
+		sysctl(mib, &ts_boottime)
+	} else {
+		clock_gettime(CLOCK_BOOTTIME, &ts_boottime)
+	}
 
 	ns := (ts_now.tv_sec - ts_boottime.tv_sec) * 1e9 + ts_now.tv_nsec - ts_boottime.tv_nsec
 	return i64(ns)
@@ -70,7 +83,12 @@ boot_time_in_nanoseconds :: proc "c" () -> i64 {
 
 seconds_since_boot :: proc "c" () -> f64 {
 	ts_boottime: timespec
-	clock_gettime(CLOCK_BOOTTIME, &ts_boottime)
+	when ODIN_OS == .NetBSD {
+		mib := []i32 { CTL_KERN, KERN_BOOTTIME }
+		sysctl(mib, &ts_boottime)
+	} else {
+		clock_gettime(CLOCK_BOOTTIME, &ts_boottime)
+	}
 	return f64(ts_boottime.tv_sec) + f64(ts_boottime.tv_nsec) / 1e9
 }
 

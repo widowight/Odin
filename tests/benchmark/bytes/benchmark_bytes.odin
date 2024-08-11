@@ -30,6 +30,7 @@ plain_last_index_byte :: proc(s: []u8, c: byte) -> (res: int) #no_bounds_check {
 sizes := [?]int {
 	15, 16, 17,
 	31, 32, 33,
+	63, 64, 65,
 	256,
 	512,
 	1024,

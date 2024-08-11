@@ -53,9 +53,9 @@ run_trial_size :: proc(p: proc([]u8, byte) -> int, size: int, idx: int, warmup: 
 	}
 
 	for _ in 0..<runs {
-		start := time.now()
+		start := time.tick_now()
 		accumulator += p(data, 'z')
-		done := time.since(start)
+		done := time.tick_since(start)
 		timing += done
 	}
 
